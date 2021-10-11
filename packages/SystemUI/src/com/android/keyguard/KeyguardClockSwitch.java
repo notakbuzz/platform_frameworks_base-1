@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
+import android.content.res.Configuration;
 
 import com.android.internal.colorextraction.ColorExtractor;
 import com.android.keyguard.dagger.KeyguardStatusViewScope;
@@ -81,6 +82,7 @@ public class KeyguardClockSwitch extends RelativeLayout {
     private int[] mColorPalette;
 
     private int mClockSwitchYAmount;
+    private int mOrientation;
 
     public KeyguardClockSwitch(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -262,6 +264,10 @@ public class KeyguardClockSwitch extends RelativeLayout {
             mClockPlugin.setDarkAmount(darkAmount);
         }
     }
+    @Override
+    protected void onConfigurationChanged(Configuration newConfig) {
+        mOrientation = newConfig.orientation;
+    }
 
     /**
      * Based upon whether notifications are showing or not, display/hide the large clock and
@@ -269,7 +275,7 @@ public class KeyguardClockSwitch extends RelativeLayout {
      */
     boolean willSwitchToLargeClock(boolean hasVisibleNotifications) {
         if (mHasVisibleNotifications != null
-                && hasVisibleNotifications == mHasVisibleNotifications) {
+                && hasVisibleNotifications == mHasVisibleNotifications && mOrientation == Configuration.ORIENTATION_LANDSCAPE) {
             return false;
         }
         boolean useLargeClock = !hasVisibleNotifications;
