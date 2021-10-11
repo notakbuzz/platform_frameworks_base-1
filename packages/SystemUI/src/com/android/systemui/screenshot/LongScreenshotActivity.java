@@ -127,6 +127,7 @@ public class LongScreenshotActivity extends Activity {
         mTransitionView = requireViewById(R.id.transition);
         mEnterTransitionView = requireViewById(R.id.enter_transition);
 
+        requireViewById(R.id.cancel).setOnClickListener(v -> finishAndRemoveTask());
         mSave.setOnClickListener(this::onClicked);
         mEdit.setOnClickListener(this::onClicked);
         mShare.setOnClickListener(this::onClicked);
