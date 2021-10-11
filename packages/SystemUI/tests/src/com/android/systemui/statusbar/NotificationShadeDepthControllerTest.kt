@@ -71,6 +71,7 @@ class NotificationShadeDepthControllerTest : SysuiTestCase() {
     @Mock private lateinit var windowToken: IBinder
     @Mock private lateinit var shadeSpring: NotificationShadeDepthController.DepthAnimation
     @Mock private lateinit var shadeAnimation: NotificationShadeDepthController.DepthAnimation
+    @Mock private lateinit var globalActionsSpring: NotificationShadeDepthController.DepthAnimation
     @Mock private lateinit var brightnessSpring: NotificationShadeDepthController.DepthAnimation
     @Mock private lateinit var listener: NotificationShadeDepthController.DepthListener
     @Mock private lateinit var dozeParameters: DozeParameters
@@ -105,6 +106,7 @@ class NotificationShadeDepthControllerTest : SysuiTestCase() {
         notificationShadeDepthController.shadeSpring = shadeSpring
         notificationShadeDepthController.shadeAnimation = shadeAnimation
         notificationShadeDepthController.brightnessMirrorSpring = brightnessSpring
+        notificationShadeDepthController.globalActionsSpring = globalActionsSpring
         notificationShadeDepthController.root = root
 
         val captor = ArgumentCaptor.forClass(StatusBarStateController.StateListener::class.java)
@@ -219,6 +221,27 @@ class NotificationShadeDepthControllerTest : SysuiTestCase() {
         notificationShadeDepthController.updateBlurCallback.doFrame(0)
         verify(blurUtils).applyBlur(any(), eq(0), eq(false))
         verify(wallpaperManager).setWallpaperZoomOut(any(), eq(1f))
+    }
+
+    @Test
+    fun updateGlobalDialogVisibility_animatesBlur() {
+        notificationShadeDepthController.updateGlobalDialogVisibility(0.5f, root)
+        verify(globalActionsSpring).animateTo(eq(maxBlur / 2), eq(root))
+    }
+
+    @Test
+    fun updateGlobalDialogVisibility_appliesBlur_withoutHomeControls() {
+        `when`(globalActionsSpring.radius).thenReturn(maxBlur)
+        notificationShadeDepthController.updateBlurCallback.doFrame(0)
+        verify(blurUtils).applyBlur(any(), eq(maxBlur), eq(false))
+    }
+
+    @Test
+    fun updateGlobalDialogVisibility_appliesBlur_unlessHomeControls() {
+        notificationShadeDepthController.showingHomeControls = true
+        `when`(globalActionsSpring.radius).thenReturn(maxBlur)
+        notificationShadeDepthController.updateBlurCallback.doFrame(0)
+        verify(blurUtils).applyBlur(any(), eq(0), eq(false))
     }
 
     @Test

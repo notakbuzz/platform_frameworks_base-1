@@ -97,6 +97,10 @@ class NotificationShadeDepthController @Inject constructor(
     var shadeAnimation = DepthAnimation()
 
     @VisibleForTesting
+    var globalActionsSpring = DepthAnimation()
+    var showingHomeControls: Boolean = false
+
+    @VisibleForTesting
     var brightnessMirrorSpring = DepthAnimation()
     var brightnessMirrorVisible: Boolean = false
         set(value) {
@@ -187,7 +191,13 @@ class NotificationShadeDepthController @Inject constructor(
             shadeRadius = 0f
         }
 
-        var blur = shadeRadius.toInt()
+        // Home controls have black background, this means that we should not have blur when they
+        // are fully visible, otherwise we'll enter Client Composition unnecessarily.
+        var globalActionsRadius = globalActionsSpring.radius
+        if (showingHomeControls) {
+            globalActionsRadius = 0
+        }
+        var blur = max(shadeRadius.toInt(), globalActionsRadius)
 
         // Make blur be 0 if it is necessary to stop blur effect.
         if (scrimsVisible) {
@@ -273,6 +283,7 @@ class NotificationShadeDepthController @Inject constructor(
             if (isDozing) {
                 shadeSpring.finishIfRunning()
                 shadeAnimation.finishIfRunning()
+                globalActionsSpring.finishIfRunning()
                 brightnessMirrorSpring.finishIfRunning()
             }
         }
@@ -429,12 +440,17 @@ class NotificationShadeDepthController @Inject constructor(
                 !keyguardStateController.isKeyguardFadingAway
     }
 
+    fun updateGlobalDialogVisibility(visibility: Float, dialogView: View?) {
+        globalActionsSpring.animateTo(blurUtils.blurRadiusOfRatio(visibility), dialogView)
+    }
+
     override fun dump(fd: FileDescriptor, pw: PrintWriter, args: Array<out String>) {
         IndentingPrintWriter(pw, "  ").let {
             it.println("StatusBarWindowBlurController:")
             it.increaseIndent()
             it.println("shadeRadius: ${shadeSpring.radius}")
             it.println("shadeAnimation: ${shadeAnimation.radius}")
+            it.println("globalActionsRadius: ${globalActionsSpring.radius}")
             it.println("brightnessMirrorRadius: ${brightnessMirrorSpring.radius}")
             it.println("wakeAndUnlockBlur: $wakeAndUnlockBlurRadius")
             it.println("blursDisabledForAppLaunch: $blursDisabledForAppLaunch")
